@@ -44,7 +44,22 @@ std::vector<std::wstring> wnd::FindPicts(const std::wstring & path)
 	return fList;
 }
 
-void wnd::ShowTime(int t, HWND hWnd)
+void wnd::ShowTime(int t, const HWND & hWnd)
 {
 	SendMessageW(hWnd, UM_SHOW_TIME, (WPARAM)t, 0);
+}
+
+void wnd::Idle(const HWND & hWnd)
+{
+	MSG msg;
+	if (PeekMessage(&msg, hWnd, 0, 0, PM_REMOVE)) 
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+}
+
+void wnd::ShowPict(const std::wstring & pictName, const HWND & hWnd)
+{
+	SendMessageW(hWnd, UM_SHOW_PICT, (WPARAM)pictName.c_str(), 0);
 }

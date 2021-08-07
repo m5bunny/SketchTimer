@@ -36,22 +36,26 @@ void SketchTimerApp::ShowTime(int t) const
 
 void SketchTimerApp::Start()
 {
-	MSG msg;
 	for (int i{}; i < numPict; ++i)
 	{
-		//SelectPict();
-		//ShowPict();
+		SelectPict();
+		ShowPict();
+		//MessageBoxW(hWnd, selectedPict.c_str(), NULL, MB_OK);
 		for (int j = timeForPict; j >= 0; --j)
 		{
 			ShowTime(j);
 			Timer t;
-			while (!t.IsDueDuration())
-			{
-				if (PeekMessage(&msg, hWnd, 0, 0, PM_REMOVE)) {
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-				}
-			}
+			while (!t.IsDueDuration()) Idle();
 		}
 	}
+}
+
+void SketchTimerApp::Idle()
+{
+	wnd::Idle(hWnd);
+}
+
+void SketchTimerApp::ShowPict() const
+{
+	wnd::ShowPict(selectedPict, hWnd);
 }

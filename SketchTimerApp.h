@@ -25,10 +25,11 @@ class SketchTimerApp
 	bool isOverlay;
 	HWND hWnd;
 
+	void SelectPict();
+	void FindPicts();
+	void Idle();
 public:
 	void Initialize(SketchTimerInitData & initData);
-	void FindPicts();
-	void SelectPict();
 	bool IsOverlay() const { return isOverlay; }
 	const std::wstring & GetSelectPict() const;
 	void ShowPict() const;

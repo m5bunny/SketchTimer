@@ -7,13 +7,18 @@
 namespace wnd
 {
 #define UM_SHOW_TIME WM_USER+1
+#define UM_SHOW_PICT WM_USER+2
 
 
 	bool isImage(const std::wstring title);
 
 	std::vector<std::wstring> FindPicts(const std::wstring& path);
 
-	void ShowTime(int t, HWND hWnd);
+	void ShowTime(int t, const HWND & hWnd);
+
+	void Idle(const HWND & hWnd);
+
+	void ShowPict(const std::wstring & pictName, const HWND & hWnd);
 }
 #endif // !WINFUNCTIONS_H_
 
