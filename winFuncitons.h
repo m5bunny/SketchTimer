@@ -6,8 +6,9 @@
 #include <vector>
 namespace wnd
 {
-#define UM_SHOW_TIME WM_USER+1
-#define UM_SHOW_PICT WM_USER+2
+#define UM_SHOW_TIME	WM_USER+1
+#define UM_SHOW_PICT	WM_USER+2
+#define UM_UPDATE_PICT	WM_USER+4
 
 
 	bool isImage(const std::wstring title);

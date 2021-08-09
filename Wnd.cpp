@@ -3,10 +3,10 @@
 Wnd::Wnd(LPCWSTR wndName, HINSTANCE hInstance, int cmdShow,
 	LRESULT(WINAPI* pWndProc)(HWND, UINT, WPARAM, LPARAM),
 	LPCWSTR menuName,
-	DWORD windowStyle,
-	UINT classStyle,
 	int x, int y,
 	int cx, int cy,
+	DWORD windowStyle,
+	UINT classStyle,
 	HWND hParent)
 {
 	const wchar_t className[] = L"Wnd";

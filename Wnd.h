@@ -10,10 +10,10 @@ public:
 	Wnd(LPCWSTR wndName, HINSTANCE hInstance, int cmdShow,
 		LRESULT(WINAPI* pWndProc)(HWND, UINT, WPARAM, LPARAM),
 		LPCWSTR menuName = NULL,
-		DWORD windowStyle = WS_OVERLAPPEDWINDOW,
-		UINT classStyle = CS_HREDRAW | CS_VREDRAW,
 		int x = CW_USEDEFAULT, int y = 0,
 		int cx = CW_USEDEFAULT, int cy = 0,
+		DWORD windowStyle = WS_OVERLAPPEDWINDOW,
+		UINT classStyle = CS_HREDRAW | CS_VREDRAW, 
 		HWND hParent = NULL);
 	const HWND GetHWnd() const { return hWnd; }
 };
