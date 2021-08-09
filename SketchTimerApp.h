@@ -23,19 +23,23 @@ class SketchTimerApp
 	int timeForPict;
 	int numPict;
 	bool isOverlay;
+	bool isPaused;
+	bool isSkiping;
 	HWND hWnd;
 
 	void SelectPict();
 	void FindPicts();
 	void Idle();
 public:
-	void Initialize(SketchTimerInitData & initData);
+	void Initialize(SketchTimerInitData& initData);
 	bool IsOverlay() const { return isOverlay; }
-	const std::wstring & GetSelectPict() const;
+	const std::wstring& GetSelectPict() const;
 	void ShowPict() const;
 	void ShowTime(int t) const;
 	void Start();
-	void SetHWnd(const HWND & _hWnd) { hWnd = _hWnd; }
+	void SetHWnd(const HWND& _hWnd) { hWnd = _hWnd; }
+	void ChangePaused() { isPaused = !isPaused;};
+	void SkipPict() { isSkiping = true; }
 };
 
 #endif // !SKETCHTIMERAPP_H_

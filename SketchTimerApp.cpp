@@ -8,6 +8,8 @@ void SketchTimerApp::Initialize(SketchTimerInitData & initData)
 	timeForPict = initData._timeForPict;
 	numPict = initData._numPict;
 	isOverlay = true;
+	isPaused = false;
+	isSkiping = false;
 	FindPicts();
 }
 
@@ -40,12 +42,18 @@ void SketchTimerApp::Start()
 	{
 		SelectPict();
 		ShowPict();
-		//MessageBoxW(hWnd, selectedPict.c_str(), NULL, MB_OK);
-		for (int j = timeForPict; j >= 0; --j)
+		for (int j = timeForPict; j >= 0;)
 		{
 			ShowTime(j);
 			Timer t;
 			while (!t.IsDueDuration()) Idle();
+			if(!isPaused)
+			--j;
+			if (isSkiping)
+			{
+				isSkiping = false;
+				break;
+			}
 		}
 	}
 }

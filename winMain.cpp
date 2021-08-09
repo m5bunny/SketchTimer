@@ -180,6 +180,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_ERASEBKGND:
 		return 0;
 
+	case WM_KEYDOWN:
+		if (wParam == VK_SPACE)
+			sta.ChangePaused();
+		if (wParam == VK_RIGHT)
+			sta.SkipPict();
+		break;
+
 	case WM_DESTROY:
 		DeleteDC(hMemDC);
 		DeleteObject(hMemBmp);
