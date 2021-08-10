@@ -42,13 +42,11 @@ void SketchTimerApp::Start()
 	{
 		SelectPict();
 		ShowPict();
-		for (int j = timeForPict; j >= 0;)
+		for (int j = timeForPict; j >= 0; --j)
 		{
 			ShowTime(j);
 			Timer t;
-			while (!t.IsDueDuration()) Idle();
-			if(!isPaused)
-			--j;
+			while (!t.IsDueDuration() || isPaused) Idle();
 			if (isSkiping)
 			{
 				isSkiping = false;

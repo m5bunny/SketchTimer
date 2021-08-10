@@ -135,7 +135,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetWindowPos(hWnd, overlay, 0, 0, windowWidth, windowHeight, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING);
 
 		SendMessageW(hWnd, UM_UPDATE_PICT, 0, 0);
-	break;
+		break;
 
 	case UM_UPDATE_PICT:
 	{
@@ -150,10 +150,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Gdiplus::Graphics grap(hMemDC);
 		grap.DrawImage(pict, 0, 0, pictWidth, pictHeight);
 	}
-		break;
+	break;
 
 	case WM_SIZE:
-		pictWidth = LOWORD(lParam);
+		pictWidth = (LOWORD(lParam) > 0) ? LOWORD(lParam) : pictWidth;
 		pictHeight = pictWidth * widthToHeightCoef;
 		windowWidth = pictWidth + pictToWndAddW;
 		windowHeight = pictHeight + pictToWndAddH;
@@ -175,14 +175,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		TextOutW(hDC, timeRect.left, 0, time.c_str(), time.size());
 		SelectObject(hDC, hFontOld);
 		EndPaint(hWnd, &ps);
-	break;
+		break;
 
 	case WM_ERASEBKGND:
 		return 0;
 
 	case WM_KEYDOWN:
 		if (wParam == VK_SPACE)
+		{
 			sta.ChangePaused();
+			time = L"Paused";
+			InvalidateRect(hWnd, NULL, TRUE);
+		}
 		if (wParam == VK_RIGHT)
 			sta.SkipPict();
 		break;
