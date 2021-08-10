@@ -7,7 +7,7 @@ void SketchTimerApp::Initialize(SketchTimerInitData & initData)
 	sourceDir = initData._sourceDir;
 	timeForPict = initData._timeForPict;
 	numPict = initData._numPict;
-	isOverlay = true;
+	isOverlay = initData._isOverlay;
 	isPaused = false;
 	isSkiping = false;
 	FindPicts();

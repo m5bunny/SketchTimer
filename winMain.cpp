@@ -50,6 +50,7 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		bi.hwndOwner = hDlg;
 		bi.lpszTitle = L"Chouse folder:";
 		bi.pszDisplayName = text;
+		CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
 		return TRUE;
 
 	case WM_COMMAND:
@@ -71,6 +72,7 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			initData._numPict = _wtoi(text);
 			SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_GETTEXT, 100, (LPARAM)text);
 			initData._timeForPict = _wtoi(text);
+			initData._isOverlay = (IsDlgButtonChecked(hDlg, IDD_M_IS_OVERLAYED) == BST_CHECKED) ? true : false;
 			sta.Initialize(initData);
 			EndDialog(hDlg, TRUE);
 			return TRUE;

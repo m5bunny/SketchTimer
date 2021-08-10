@@ -12,8 +12,8 @@ struct SketchTimerInitData
 	std::wstring _sourceDir;
 	int _timeForPict;
 	int _numPict;
+	bool _isOverlay;
 };
-
 
 class SketchTimerApp
 {
