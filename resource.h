@@ -7,6 +7,7 @@
 #define IDD_INIT_DATA                   1003
 #define IDD_M_TIME_FOR_PIC              1004
 #define IDD_M_IS_OVERLAYED              1007
+#define IDD_M_IS_AUTOSIZE               1008
 
 // Next default values for new objects
 // 

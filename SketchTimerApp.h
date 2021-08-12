@@ -13,6 +13,7 @@ struct SketchTimerInitData
 	int _timeForPict;
 	int _numPict;
 	bool _isOverlay;
+	bool _isAutosizing;
 };
 
 class SketchTimerApp
@@ -25,6 +26,7 @@ class SketchTimerApp
 	bool isOverlay;
 	bool isPaused;
 	bool isSkiping;
+	bool isAutosizing;
 	HWND hWnd;
 
 	void SelectPict();
@@ -33,6 +35,7 @@ class SketchTimerApp
 public:
 	void Initialize(SketchTimerInitData& initData);
 	bool IsOverlay() const { return isOverlay; }
+	bool IsAutosizing() const { return isAutosizing; }
 	const std::wstring& GetSelectPict() const;
 	void ShowPict() const;
 	void ShowTime(int t) const;
