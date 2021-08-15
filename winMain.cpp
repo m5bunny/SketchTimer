@@ -19,10 +19,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	Gdiplus::GdiplusStartupInput si;
 	ULONG_PTR token;
 
-	DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_INIT_DATA), NULL, initDataDlgProc);
-
-	Wnd mainWnd(L"Sketch Timer", hInstance, nCmdShow, WndProc, NULL, CW_USEDEFAULT, 0, 
+	Wnd mainWnd(L"Sketch Timer", hInstance, nCmdShow, WndProc, NULL, CW_USEDEFAULT, 0,
 		GetSystemMetrics(SM_CXSCREEN) * 30 / 100);
+
+	DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_INIT_DATA), mainWnd.GetHWnd(), initDataDlgProc);
 
 	Gdiplus::GdiplusStartup(&token, &si, 0);
 	
@@ -74,8 +74,13 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			initData._timeForPict = _wtoi(text);
 			initData._isOverlay = (IsDlgButtonChecked(hDlg, IDD_M_IS_OVERLAYED) == BST_CHECKED) ? true : false;
 			initData._isAutosizing = (IsDlgButtonChecked(hDlg, IDD_M_IS_AUTOSIZE) == BST_CHECKED) ? true : false;
-			sta.Initialize(initData);
-			EndDialog(hDlg, TRUE);
+			if (initData._sourceDir != L"" && initData._numPict > 0 && initData._timeForPict > 0)
+			{
+				sta.Initialize(initData);
+				EndDialog(hDlg, TRUE);
+			}
+			else
+				MessageBoxW(hDlg, L"The path can't be blank, number of pictures and time for picture should be more than 0", L"Error", MB_ICONERROR | MB_OK);
 			return TRUE;
 
 		case IDCANCEL:
@@ -260,8 +265,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		if (wParam == VK_SPACE)
 		{
+			GetClientRect(hWnd, &pictRect);
 			sta.ChangePaused();
 			time = L"Paused";
+			prevTimeRectLeft = pictRect.right - (time.length() * lf.lfWidth);
 			InvalidateRect(hWnd, NULL, TRUE);
 		}
 		if (wParam == VK_RIGHT)
