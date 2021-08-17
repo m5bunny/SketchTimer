@@ -6,12 +6,17 @@
 #include "Wnd.h"
 #include "winFuncitons.h"
 #include "resource.h"
+#include <fstream>
 
 SketchTimerInitData initData;
+SketchTimerPreset presetData;
 SketchTimerApp sta;
 
+BOOL CALLBACK savePresetTitleDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK initDataDlgProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+void SaveSettings(const HWND hWnd);
+void SavePreset(const std::wstring & settingsFileTitle, SketchTimerPreset& _presetData);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -19,8 +24,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	Gdiplus::GdiplusStartupInput si;
 	ULONG_PTR token;
 
-	Wnd mainWnd(L"Sketch Timer", hInstance, nCmdShow, WndProc, NULL, CW_USEDEFAULT, 0,
-		GetSystemMetrics(SM_CXSCREEN) * 30 / 100);
+	Wnd mainWnd(L"Sketch Timer", hInstance, nCmdShow, WndProc, NULL, sta.GetInitWndSize()[0], sta.GetInitWndSize()[1], sta.GetInitWndSize()[2], sta.GetInitWndSize()[3]);
 
 	DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_INIT_DATA), mainWnd.GetHWnd(), initDataDlgProc);
 
@@ -39,22 +43,71 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	return msg.wParam;
 }
 
+BOOL CALLBACK savePresetTitleDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_INITDIALOG:
+		return TRUE;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case IDOK:
+		{
+			wchar_t titleBuf[100];
+			SendDlgItemMessageW(hDlg, IDD_M_PRESET_TITLE, WM_GETTEXT, 100, (LPARAM)titleBuf);
+			presetData._presetTitle = titleBuf;
+			if (presetData._presetTitle.length() > 0)
+				EndDialog(hDlg, TRUE);
+			else
+				MessageBoxW(hDlg, L"You have to enter the title to save the preset", L"Error", MB_OK | MB_ICONERROR);
+			return TRUE;
+		}
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			return TRUE;
+		}
+		break;
+	}
+
+	return FALSE;
+}
 
 BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static BROWSEINFOW  bi{};
 	static wchar_t text[100]{};
+	static HWND hSelectPresetCB;
+	static std::vector<std::wstring> presetList;
 	switch (uMsg)
 	{
 	case WM_INITDIALOG:
+	{
 		bi.hwndOwner = hDlg;
 		bi.lpszTitle = L"Chouse folder:";
 		bi.pszDisplayName = text;
-		CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
-		return TRUE;
 
+		hSelectPresetCB = GetDlgItem(hDlg, IDD_M_PRESETS_CB);
+		std::wifstream settingsIn(sta.GetSettingFileTitle());
+		std::wstring buf;
+		while (!settingsIn.eof())
+		{
+			std::getline(settingsIn, buf);
+			if (buf == L"PRESET")
+			{
+				std::getline(settingsIn, buf);
+				presetList.push_back(buf);
+				SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)buf.c_str());
+			}
+		}
+		if (presetList.size() == 0)
+			EnableWindow(hSelectPresetCB, FALSE);
+
+		settingsIn.close();
+		return TRUE;
+	}
 	case WM_COMMAND:
-		switch (wParam)
+		switch (LOWORD(wParam))
 		{
 		case IDD_M_SELECT_FOLDER:
 		{
@@ -62,12 +115,14 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (lpItem)
 			{
 				SHGetPathFromIDListW(lpItem, text);
-				initData._sourceDir = text;
+				SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)text);
 			}
 		}
 		break;
 
 		case IDOK:
+			SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_GETTEXT, 100, (LPARAM)text);
+			initData._sourceDir = text;
 			SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_GETTEXT, 100, (LPARAM)text);
 			initData._numPict = _wtoi(text);
 			SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_GETTEXT, 100, (LPARAM)text);
@@ -82,6 +137,58 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			else
 				MessageBoxW(hDlg, L"The path can't be blank, number of pictures and time for picture should be more than 0", L"Error", MB_ICONERROR | MB_OK);
 			return TRUE;
+		
+		case IDD_M_PRESETS_CB:
+		{
+			std::wifstream settingsIn(sta.GetSettingFileTitle());
+			std::wstring buf;
+			int selectedPreset =SendMessageW(hSelectPresetCB, CB_GETCURSEL, 0, 0);
+			while (!settingsIn.eof())
+			{
+				std::getline(settingsIn, buf);
+				if (buf == presetList[selectedPreset])
+				{
+					std::getline(settingsIn, buf);
+					SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+					std::getline(settingsIn, buf);
+					SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+					std::getline(settingsIn, buf);
+					SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+					std::getline(settingsIn, buf);
+					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
+					else CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_UNCHECKED);
+					std::getline(settingsIn, buf);
+					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_CHECKED);
+					else CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_UNCHECKED);
+					break;
+				}
+			}
+			settingsIn.close();
+		}
+		break;
+
+		case IDD_M_SAVE_PRESET:
+			if (DialogBoxW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_SAVE_PRESET_TITLE), hDlg, savePresetTitleDlgProc));
+			{
+				SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_GETTEXT, 100, (LPARAM)text);
+				presetData._sourceDir = text;
+				SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_GETTEXT, 100, (LPARAM)text);
+				presetData._numPict = _wtoi(text);
+				SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_GETTEXT, 100, (LPARAM)text);
+				presetData._timeForPict = _wtoi(text);
+				presetData._isOverlay = (IsDlgButtonChecked(hDlg, IDD_M_IS_OVERLAYED) == BST_CHECKED) ? true : false;
+				presetData._isAutosizing = (IsDlgButtonChecked(hDlg, IDD_M_IS_AUTOSIZE) == BST_CHECKED) ? true : false;
+				if (presetData._sourceDir.length() > 0 && presetData._numPict > 0 && presetData._timeForPict > 0)
+				{
+					SavePreset(sta.GetSettingFileTitle(), presetData);
+					presetList.push_back(presetData._presetTitle);
+					SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)presetData._presetTitle.c_str());
+					EnableWindow(hSelectPresetCB, TRUE);
+				}
+				else
+					MessageBoxW(hDlg, L"The path can't be blank, number of pictures and time for picture should be more than 0", L"Error", MB_ICONERROR | MB_OK);
+			}
+			break;
 
 		case IDCANCEL:
 			PostQuitMessage(0);
@@ -127,9 +234,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			overlay = HWND_TOPMOST;
 		if (!sta.IsAutosizing())
 		{
-			windowWidth = GetSystemMetrics(SM_CXSCREEN) * 30 / 100;
-			windowHeight = GetSystemMetrics(SM_CYSCREEN) * 30 / 100;
-			SetWindowPos(hWnd, overlay, 0, 0, windowWidth, windowHeight, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING);
+			SetWindowPos(hWnd, overlay, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOSIZE);
 		}
 		break;
 
@@ -276,6 +381,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_DESTROY:
+		SaveSettings(hWnd);
 		DeleteDC(hMemDC);
 		DeleteObject(hMemBmp);
 		DeleteObject(hFont);
@@ -286,4 +392,72 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 	}
 	return 0;
+}
+
+void SaveSettings(const HWND hWnd)
+{
+	int counter{};
+	bool isUserPresetFlag{ false };
+	std::wfstream settingsIn(sta.GetSettingFileTitle());
+	std::wstring buf;
+	while (!settingsIn.eof())
+	{
+		std::getline(settingsIn, buf);
+		if (buf == L"PRESET")
+			++counter;
+		if (counter == 2)
+		{
+			isUserPresetFlag = true;
+			break;
+		}
+	}
+	if (isUserPresetFlag)
+	{
+		std::wstring singleStrbuf;
+		buf.clear();
+		buf = L"PRESET\n";
+		while (!settingsIn.eof())
+		{
+			std::getline(settingsIn, singleStrbuf);
+			buf += singleStrbuf + L"\n";
+		}
+	}
+
+	settingsIn.close();
+
+
+	std::wofstream settingsOut(sta.GetSettingFileTitle());
+	RECT currentWndRect;
+	GetWindowRect(hWnd, &currentWndRect);
+	settingsOut << currentWndRect.left << std::endl
+		<< currentWndRect.top << std::endl
+		<< (currentWndRect.right - currentWndRect.left) << std::endl
+		<< (currentWndRect.bottom - currentWndRect.top) << std::endl;
+	settingsOut.close();
+	presetData._presetTitle = L"Last session";
+	presetData._sourceDir = initData._sourceDir;
+	presetData._numPict = initData._numPict;
+	presetData._timeForPict = initData._timeForPict;
+	presetData._isOverlay = initData._isOverlay;
+	presetData._isAutosizing = initData._isAutosizing;
+	SavePreset(sta.GetSettingFileTitle(), presetData);
+	if (isUserPresetFlag)
+	{
+		settingsOut.open(sta.GetSettingFileTitle(), std::ios::app);
+		settingsOut << buf;
+		settingsOut.close();
+	}
+}
+
+void SavePreset(const std::wstring & settingsFileTitle,SketchTimerPreset & _presetData)
+{
+	std::wofstream settingsOut(sta.GetSettingFileTitle(), std::ios_base::app);
+	settingsOut << L"PRESET" << std::endl
+				<< _presetData._presetTitle.c_str() << std::endl
+				<< _presetData._sourceDir.c_str() << std::endl
+				<< _presetData._numPict << std::endl
+				<< _presetData._timeForPict << std::endl
+				<< _presetData._isOverlay << std::endl
+				<< _presetData._isAutosizing << std::endl;
+	settingsOut.close();
 }

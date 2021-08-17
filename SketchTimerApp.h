@@ -16,8 +16,21 @@ struct SketchTimerInitData
 	bool _isAutosizing;
 };
 
+struct SketchTimerPreset
+{
+	std::wstring _presetTitle;
+	std::wstring _sourceDir;
+	int _timeForPict;
+	int _numPict;
+	bool _isOverlay;
+	bool _isAutosizing;
+};
+
 class SketchTimerApp
 {
+	std::wstring settingsFileTitle = L"Settings.txt";
+	int initWndSize[4];
+
 	std::wstring sourceDir;
 	std::wstring selectedPict;
 	std::vector<std::wstring> pictNames;
@@ -32,7 +45,9 @@ class SketchTimerApp
 	void SelectPict();
 	void FindPicts();
 	void Idle();
+	void ReedInitWndSize();
 public:
+	SketchTimerApp();
 	void Initialize(SketchTimerInitData& initData);
 	bool IsOverlay() const { return isOverlay; }
 	bool IsAutosizing() const { return isAutosizing; }
@@ -43,6 +58,8 @@ public:
 	void SetHWnd(const HWND& _hWnd) { hWnd = _hWnd; }
 	void ChangePaused() { isPaused = !isPaused;};
 	void SkipPict() { isSkiping = true; }
+	int * GetInitWndSize() { return initWndSize;  };
+	const std::wstring& GetSettingFileTitle() const { return settingsFileTitle; }
 };
 
 #endif // !SKETCHTIMERAPP_H_

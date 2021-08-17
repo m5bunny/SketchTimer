@@ -1,6 +1,38 @@
 #include "SketchTimerApp.h"
 #include "Timer.h"
 #include "winFuncitons.h"
+#include <fstream>
+
+SketchTimerApp::SketchTimerApp()
+{
+	ReedInitWndSize();
+}
+
+void SketchTimerApp::ReedInitWndSize()
+{
+	std::wifstream settingsIn;
+	settingsIn.open(settingsFileTitle);
+	if (!settingsIn || settingsIn.peek() == std::ifstream::traits_type::eof())
+	{
+		settingsIn.close();
+		std::wofstream settingsOut;
+		settingsOut.open(settingsFileTitle);
+		settingsOut << 0 << std::endl
+			<< 0 << std::endl
+			<< 400 << std::endl
+			<< 200 << std::endl;
+		settingsOut.close();
+		settingsIn.open(settingsFileTitle);
+	}
+	for (int i{}; i < 4; ++i)
+	{
+		settingsIn >> initWndSize[i];
+	}
+
+	settingsIn.close();
+
+}
+
 
 void SketchTimerApp::Initialize(SketchTimerInitData & initData)
 {
