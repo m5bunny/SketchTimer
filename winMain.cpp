@@ -106,7 +106,18 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)buf.c_str());
 			}
 		}
-		std::sort(presetList.begin(), presetList.end());
+		std::sort(presetList.begin(), presetList.end(), 
+			[](const std::wstring& a, const std::wstring& b)
+			{
+				std::setlocale(LC_CTYPE, "");
+				std::wstring tempA, tempB;
+				tempA.resize(a.length());
+				tempB.resize(b.length());
+				std::transform(a.begin(), a.end(), tempA.begin(), ::towlower);
+				std::transform(b.begin(), b.end(), tempB.begin(), ::towlower);
+				return tempA < tempB;
+			});
+
 		if (presetList.size() == 0)
 			EnableWindow(hSelectPresetCB, FALSE);
 
@@ -195,7 +206,17 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				SavePreset(sta.GetSettingFileTitle(), presetData);
 				presetList.push_back(presetData._presetTitle);
-				std::sort(presetList.begin(), presetList.end());
+				std::sort(presetList.begin(), presetList.end(),
+					[](const std::wstring& a, const std::wstring& b)
+					{
+						std::setlocale(LC_CTYPE, "");
+						std::wstring tempA, tempB;
+						tempA.resize(a.length());
+						tempB.resize(b.length());
+						std::transform(a.begin(), a.end(), tempA.begin(), ::towlower);
+						std::transform(b.begin(), b.end(), tempB.begin(), ::towlower);
+						return tempA < tempB;
+					});
 				SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)presetData._presetTitle.c_str());
 				EnableWindow(hSelectPresetCB, TRUE);
 			}
