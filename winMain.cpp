@@ -151,24 +151,28 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			settingsIn.imbue(mylocale);
 			std::wstring buf;
 			int selectedPreset =SendMessageW(hSelectPresetCB, CB_GETCURSEL, 0, 0);
-			while (!settingsIn.eof())
+			if (selectedPreset >= 0)
 			{
-				std::getline(settingsIn, buf);
-				if (buf == presetList[selectedPreset])
+
+				while (!settingsIn.eof())
 				{
 					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
-					else CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_UNCHECKED);
-					std::getline(settingsIn, buf);
-					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_CHECKED);
-					else CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_UNCHECKED);
-					break;
+					if (buf == presetList[selectedPreset])
+					{
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
+						else CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_UNCHECKED);
+						std::getline(settingsIn, buf);
+						if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_CHECKED);
+						else CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_UNCHECKED);
+						break;
+					}
 				}
 			}
 			settingsIn.close();
