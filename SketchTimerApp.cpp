@@ -20,7 +20,14 @@ void SketchTimerApp::ReedInitWndSize()
 		settingsOut << 0 << std::endl
 			<< 0 << std::endl
 			<< 400 << std::endl
-			<< 200 << std::endl;
+			<< 200 << std::endl
+			<< "PRESET" << std::endl
+			<< L"Last session" << std::endl
+			<< L"" << std::endl
+			<< L"0" << std::endl
+			<< L"0" << std::endl
+			<< L"1" << std::endl
+			<< L"0" << std::endl;
 		settingsOut.close();
 		settingsIn.open(settingsFileTitle);
 	}
