@@ -7,6 +7,10 @@
 #include "winFuncitons.h"
 #include "resource.h"
 #include <fstream>
+#include <locale> 
+#include <algorithm>
+
+std::locale mylocale("");
 
 SketchTimerInitData initData;
 SketchTimerPreset presetData;
@@ -29,7 +33,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_INIT_DATA), mainWnd.GetHWnd(), initDataDlgProc);
 
 	Gdiplus::GdiplusStartup(&token, &si, 0);
-	
+	if (sta.IsOverlay())
+		SetWindowPos(mainWnd.GetHWnd(), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOSIZE);
 	sta.SetHWnd(mainWnd.GetHWnd());
 	sta.Start();
 
@@ -89,6 +94,7 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		hSelectPresetCB = GetDlgItem(hDlg, IDD_M_PRESETS_CB);
 		std::wifstream settingsIn(sta.GetSettingFileTitle());
+		settingsIn.imbue(mylocale);
 		std::wstring buf;
 		while (!settingsIn.eof())
 		{
@@ -100,6 +106,7 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)buf.c_str());
 			}
 		}
+		std::sort(presetList.begin(), presetList.end());
 		if (presetList.size() == 0)
 			EnableWindow(hSelectPresetCB, FALSE);
 
@@ -141,26 +148,31 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDD_M_PRESETS_CB:
 		{
 			std::wifstream settingsIn(sta.GetSettingFileTitle());
+			settingsIn.imbue(mylocale);
 			std::wstring buf;
 			int selectedPreset =SendMessageW(hSelectPresetCB, CB_GETCURSEL, 0, 0);
-			while (!settingsIn.eof())
+			if (selectedPreset >= 0)
 			{
-				std::getline(settingsIn, buf);
-				if (buf == presetList[selectedPreset])
+
+				while (!settingsIn.eof())
 				{
 					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_SETTEXT, 0, (LPARAM)buf.c_str());
-					std::getline(settingsIn, buf);
-					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
-					else CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_UNCHECKED);
-					std::getline(settingsIn, buf);
-					if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_CHECKED);
-					else CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_UNCHECKED);
-					break;
+					if (buf == presetList[selectedPreset])
+					{
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_SETTEXT, 0, (LPARAM)buf.c_str());
+						std::getline(settingsIn, buf);
+						if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_CHECKED);
+						else CheckDlgButton(hDlg, IDD_M_IS_OVERLAYED, BST_UNCHECKED);
+						std::getline(settingsIn, buf);
+						if (buf == L"1") CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_CHECKED);
+						else CheckDlgButton(hDlg, IDD_M_IS_AUTOSIZE, BST_UNCHECKED);
+						break;
+					}
 				}
 			}
 			settingsIn.close();
@@ -182,6 +194,7 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				{
 					SavePreset(sta.GetSettingFileTitle(), presetData);
 					presetList.push_back(presetData._presetTitle);
+					std::sort(presetList.begin(), presetList.end());
 					SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)presetData._presetTitle.c_str());
 					EnableWindow(hSelectPresetCB, TRUE);
 				}
@@ -232,10 +245,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		if (sta.IsOverlay())
 			overlay = HWND_TOPMOST;
-		if (!sta.IsAutosizing())
-		{
-			SetWindowPos(hWnd, overlay, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOSIZE);
-		}
+		
 		break;
 
 	case UM_SHOW_TIME:
@@ -374,7 +384,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			sta.ChangePaused();
 			time = L"Paused";
 			prevTimeRectLeft = pictRect.right - (time.length() * lf.lfWidth);
-			InvalidateRect(hWnd, NULL, TRUE);
+			timeRect.left = prevTimeRectLeft;
+			timeRect.right = pictRect.right;
+			timeRect.bottom = lf.lfHeight;
+			timeRect.top = 0;
+			InvalidateRect(hWnd, &timeRect, TRUE);
 		}
 		if (wParam == VK_RIGHT)
 			sta.SkipPict();
@@ -399,6 +413,7 @@ void SaveSettings(const HWND hWnd)
 	int counter{};
 	bool isUserPresetFlag{ false };
 	std::wfstream settingsIn(sta.GetSettingFileTitle());
+	settingsIn.imbue(mylocale);
 	std::wstring buf;
 	while (!settingsIn.eof())
 	{
@@ -419,7 +434,8 @@ void SaveSettings(const HWND hWnd)
 		while (!settingsIn.eof())
 		{
 			std::getline(settingsIn, singleStrbuf);
-			buf += singleStrbuf + L"\n";
+			if (!settingsIn.eof())
+				buf += singleStrbuf + L"\n";
 		}
 	}
 
@@ -427,6 +443,7 @@ void SaveSettings(const HWND hWnd)
 
 
 	std::wofstream settingsOut(sta.GetSettingFileTitle());
+	settingsOut.imbue(mylocale);
 	RECT currentWndRect;
 	GetWindowRect(hWnd, &currentWndRect);
 	settingsOut << currentWndRect.left << std::endl
@@ -452,6 +469,7 @@ void SaveSettings(const HWND hWnd)
 void SavePreset(const std::wstring & settingsFileTitle,SketchTimerPreset & _presetData)
 {
 	std::wofstream settingsOut(sta.GetSettingFileTitle(), std::ios_base::app);
+	settingsOut.imbue(mylocale);
 	settingsOut << L"PRESET" << std::endl
 				<< _presetData._presetTitle.c_str() << std::endl
 				<< _presetData._sourceDir.c_str() << std::endl
