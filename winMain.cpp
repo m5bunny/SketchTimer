@@ -180,27 +180,27 @@ BOOL CALLBACK initDataDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 		case IDD_M_SAVE_PRESET:
-			if (DialogBoxW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_SAVE_PRESET_TITLE), hDlg, savePresetTitleDlgProc));
+			DialogBoxW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_SAVE_PRESET_TITLE), hDlg, savePresetTitleDlgProc);
+			if (presetData._presetTitle == L"")
+				break;
+			SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_GETTEXT, 100, (LPARAM)text);
+			presetData._sourceDir = text;
+			SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_GETTEXT, 100, (LPARAM)text);
+			presetData._numPict = _wtoi(text);
+			SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_GETTEXT, 100, (LPARAM)text);
+			presetData._timeForPict = _wtoi(text);
+			presetData._isOverlay = (IsDlgButtonChecked(hDlg, IDD_M_IS_OVERLAYED) == BST_CHECKED) ? true : false;
+			presetData._isAutosizing = (IsDlgButtonChecked(hDlg, IDD_M_IS_AUTOSIZE) == BST_CHECKED) ? true : false;
+			if (presetData._sourceDir.length() > 0 && presetData._numPict > 0 && presetData._timeForPict > 0)
 			{
-				SendDlgItemMessageW(hDlg, IDD_M_SELECT_FOLDER_EB, WM_GETTEXT, 100, (LPARAM)text);
-				presetData._sourceDir = text;
-				SendDlgItemMessageW(hDlg, IDD_M_NUM_PICTS, WM_GETTEXT, 100, (LPARAM)text);
-				presetData._numPict = _wtoi(text);
-				SendDlgItemMessageW(hDlg, IDD_M_TIME_FOR_PIC, WM_GETTEXT, 100, (LPARAM)text);
-				presetData._timeForPict = _wtoi(text);
-				presetData._isOverlay = (IsDlgButtonChecked(hDlg, IDD_M_IS_OVERLAYED) == BST_CHECKED) ? true : false;
-				presetData._isAutosizing = (IsDlgButtonChecked(hDlg, IDD_M_IS_AUTOSIZE) == BST_CHECKED) ? true : false;
-				if (presetData._sourceDir.length() > 0 && presetData._numPict > 0 && presetData._timeForPict > 0)
-				{
-					SavePreset(sta.GetSettingFileTitle(), presetData);
-					presetList.push_back(presetData._presetTitle);
-					std::sort(presetList.begin(), presetList.end());
-					SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)presetData._presetTitle.c_str());
-					EnableWindow(hSelectPresetCB, TRUE);
-				}
-				else
-					MessageBoxW(hDlg, L"The path can't be blank, number of pictures and time for picture should be more than 0", L"Error", MB_ICONERROR | MB_OK);
+				SavePreset(sta.GetSettingFileTitle(), presetData);
+				presetList.push_back(presetData._presetTitle);
+				std::sort(presetList.begin(), presetList.end());
+				SendMessageW(hSelectPresetCB, CB_ADDSTRING, 0, (LPARAM)presetData._presetTitle.c_str());
+				EnableWindow(hSelectPresetCB, TRUE);
 			}
+			else
+				MessageBoxW(hDlg, L"The path can't be blank, number of pictures and time for picture should be more than 0", L"Error", MB_ICONERROR | MB_OK);
 			break;
 
 		case IDCANCEL:
